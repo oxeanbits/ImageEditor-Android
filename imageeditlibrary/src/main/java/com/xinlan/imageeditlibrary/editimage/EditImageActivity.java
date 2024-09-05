@@ -46,11 +46,11 @@ import com.xinlan.imageeditlibrary.editimage.widget.RedoUndoController;
  * 图片编辑 主页面
  *
  * @author panyi
- *         <p>
- *         包含 1.贴图 2.滤镜 3.剪裁 4.底图旋转 功能
- *         add new modules
+ * <p>
+ * 包含 1.贴图 2.滤镜 3.剪裁 4.底图旋转 功能 add new modules
  */
 public class EditImageActivity extends BaseActivity {
+
     public static final String FILE_PATH = "file_path";
     public static final String EXTRA_OUTPUT = "extra_output";
     public static final String SAVE_FILE_PATH = "save_file_path";
@@ -120,6 +120,8 @@ public class EditImageActivity extends BaseActivity {
         Intent it = new Intent(context, EditImageActivity.class);
         it.putExtra(EditImageActivity.FILE_PATH, editImagePath);
         it.putExtra(EditImageActivity.EXTRA_OUTPUT, outputPath);
+        it.setDataAndType(Uri.parse(editImagePath), "image/*");
+        it.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         context.startActivityForResult(it, requestCode);
     }
 
@@ -183,7 +185,6 @@ public class EditImageActivity extends BaseActivity {
 
         bottomGallery.setAdapter(mBottomGalleryAdapter);
 
-
         mainImage.setFlingListener(new ImageViewTouch.OnImageFlingListener() {
             @Override
             public void onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
@@ -210,6 +211,7 @@ public class EditImageActivity extends BaseActivity {
      * @author panyi
      */
     private final class BottomGalleryAdapter extends FragmentPagerAdapter {
+
         public BottomGalleryAdapter(FragmentManager fm) {
             super(fm);
         }
@@ -220,7 +222,7 @@ public class EditImageActivity extends BaseActivity {
             switch (index) {
                 case MainMenuFragment.INDEX:// 主菜单
                     return mMainMenuFragment;
-               /* case StickerFragment.INDEX:// 贴图
+                /* case StickerFragment.INDEX:// 贴图
                     return mStickerFragment;*/
                 case FilterListFragment.INDEX:// 滤镜
                     return mFilterListFragment;
@@ -261,6 +263,7 @@ public class EditImageActivity extends BaseActivity {
      * 导入文件图片任务
      */
     private final class LoadImageTask extends AsyncTask<String, Void, Bitmap> {
+
         @Override
         protected Bitmap doInBackground(String... params) {
             return BitmapUtils.getSampledBitmap(params[0], imageWidth,
@@ -276,7 +279,7 @@ public class EditImageActivity extends BaseActivity {
     @Override
     public void onBackPressed() {
         switch (mode) {
-           /* case MODE_STICKERS:
+            /* case MODE_STICKERS:
                 mStickerFragment.backToMain();
                 return;*/
             case MODE_FILTER:// 滤镜编辑状态
@@ -294,7 +297,7 @@ public class EditImageActivity extends BaseActivity {
             case MODE_PAINT:
                 mPaintFragment.backToMain();
                 return;
-           /* case MODE_BEAUTY://从美颜模式中返回
+            /* case MODE_BEAUTY://从美颜模式中返回
                 mBeautyFragment.backToMain();
                 return;*/
         }// end switch
@@ -325,10 +328,11 @@ public class EditImageActivity extends BaseActivity {
      * @author panyi
      */
     private final class ApplyBtnClick implements OnClickListener {
+
         @Override
         public void onClick(View v) {
             switch (mode) {
-               /* case MODE_STICKERS:
+                /* case MODE_STICKERS:
                     mStickerFragment.applyStickers();// 保存贴图
                     break;*/
                 case MODE_FILTER:// 滤镜编辑状态
@@ -361,6 +365,7 @@ public class EditImageActivity extends BaseActivity {
      * @author panyi
      */
     private final class SaveBtnClick implements OnClickListener {
+
         @Override
         public void onClick(View v) {
             if (mOpTimes == 0) {//并未修改图片
@@ -372,8 +377,9 @@ public class EditImageActivity extends BaseActivity {
     }// end inner class
 
     protected void doSaveImage() {
-        if (mOpTimes <= 0)
+        if (mOpTimes <= 0) {
             return;
+        }
 
         if (mSaveImageTask != null) {
             mSaveImageTask.cancel(true);
@@ -388,12 +394,13 @@ public class EditImageActivity extends BaseActivity {
      * @param needPushUndoStack
      */
     public void changeMainBitmap(Bitmap newBit, boolean needPushUndoStack) {
-        if (newBit == null)
+        if (newBit == null) {
             return;
+        }
 
         if (mainBitmap == null || mainBitmap != newBit) {
             if (needPushUndoStack) {
-                mRedoUndoController.switchMainBit(mainBitmap,newBit);
+                mRedoUndoController.switchMainBit(mainBitmap, newBit);
                 increaseOpTimes();
             }
             mainBitmap = newBit;
@@ -443,16 +450,17 @@ public class EditImageActivity extends BaseActivity {
     }
 
     /**
-     * 保存图像
-     * 完成后退出
+     * 保存图像 完成后退出
      */
     private final class SaveImageTask extends AsyncTask<Bitmap, Void, Boolean> {
+
         private Dialog dialog;
 
         @Override
         protected Boolean doInBackground(Bitmap... params) {
-            if (TextUtils.isEmpty(saveFilePath))
+            if (TextUtils.isEmpty(saveFilePath)) {
                 return false;
+            }
 
             return BitmapUtils.saveBitmap(params[0], saveFilePath);
         }
