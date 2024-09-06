@@ -2,13 +2,14 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 30
+    namespace 'com.xinlan.imageeditandroid'
+    compileSdkVersion 34
     buildToolsVersion '30.0.3'
 
     defaultConfig {
         applicationId "com.xinlan.imageeditandroid"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
     }

@@ -119,8 +119,6 @@ public class EditImageActivity extends BaseActivity {
         Intent it = new Intent(context, EditImageActivity.class);
         it.putExtra(EditImageActivity.FILE_PATH, editImagePath);
         it.putExtra(EditImageActivity.EXTRA_OUTPUT, outputPath);
-        it.setDataAndType(Uri.parse(editImagePath), "image/*");
-        it.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         context.startActivityForResult(it, requestCode);
     }
 
