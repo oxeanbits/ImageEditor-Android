@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA,Manifest.permission.READ_EXTERNAL_STORAGE},
+                    new String[]{Manifest.permission.CAMERA,Manifest.permission.MANAGE_EXTERNAL_STORAGE},
                     REQUEST_PERMISSON_CAMERA);
             return;
         }
@@ -152,10 +152,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void openAblumWithPermissionsCheck() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.MANAGE_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    new String[]{Manifest.permission.MANAGE_EXTERNAL_STORAGE},
                     REQUEST_PERMISSON_SORAGE);
             return;
         }
