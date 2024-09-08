@@ -162,7 +162,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void openAblumWithPermissionsCheck() {
-        // Verifica se todas as permissões necessárias foram concedidas
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED ||
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO)
@@ -172,7 +171,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO)
                         != PackageManager.PERMISSION_GRANTED) {
 
-            // Solicita as permissões necessárias
             ActivityCompat.requestPermissions(this,
                     new String[]{
                             Manifest.permission.CAMERA,
