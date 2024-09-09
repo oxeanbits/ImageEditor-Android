@@ -448,8 +448,11 @@ public class EditImageActivity extends BaseActivity {
         returnIntent.putExtra(FILE_PATH, filePath);
         returnIntent.putExtra(EXTRA_OUTPUT, saveFilePath);
         returnIntent.putExtra(IMAGE_IS_EDIT, mOpTimes > 0);
-
-        albumUpdate(this, saveFilePath);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            albumUpdate(this, saveFilePath);
+        } else {
+            FileUtil.albumUpdate(this, saveFilePath);
+        }
         setResult(RESULT_OK, returnIntent);
         finish();
     }
