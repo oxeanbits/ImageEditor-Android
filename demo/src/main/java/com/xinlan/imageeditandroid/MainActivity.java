@@ -71,16 +71,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.take_photo:
-                takePhotoClick();
-                break;
-            case R.id.edit_image:
-                editImageClick();
-                break;
-            case R.id.select_ablum:
-                selectFromAblum();
-                break;
+        int id = v.getId();
+        if (id == R.id.take_photo) {
+            takePhotoClick();
+        } else if (id == R.id.edit_image) {
+            editImageClick();
+        } else if (id == R.id.select_ablum) {
+            selectFromAblum();
         }//end switch
     }
 
@@ -100,9 +97,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void requestTakePhotoPermissions() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO)
+                        != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO)
+                        != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
+                        != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA,Manifest.permission.READ_EXTERNAL_STORAGE},
+                    new String[]{Manifest.permission.CAMERA, Manifest.permission.READ_MEDIA_VIDEO,
+                            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_AUDIO},
                     REQUEST_PERMISSON_CAMERA);
             return;
         }
@@ -116,14 +120,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = FileUtils.genEditFile();
-            // Continue only if the File was successfully created
             if (photoFile != null) {
-                photoURI = Uri.fromFile(photoFile);
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "com.xinlan.imageeditandroid.fileprovider",
+                        photoFile);
+
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+
+                takePictureIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
                 startActivityForResult(takePictureIntent, TAKE_PHOTO_CODE);
             }
-
-            //startActivityForResult(takePictureIntent, TAKE_PHOTO_CODE);
         }
     }
 
@@ -155,10 +162,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void openAblumWithPermissionsCheck() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_AUDIO)
+                        != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
+                        != PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_VIDEO)
+                        != PackageManager.PERMISSION_GRANTED) {
+
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    new String[]{
+                            Manifest.permission.CAMERA,
+                            Manifest.permission.READ_MEDIA_AUDIO,
+                            Manifest.permission.READ_MEDIA_IMAGES,
+                            Manifest.permission.READ_MEDIA_VIDEO
+                    },
                     REQUEST_PERMISSON_SORAGE);
             return;
         }

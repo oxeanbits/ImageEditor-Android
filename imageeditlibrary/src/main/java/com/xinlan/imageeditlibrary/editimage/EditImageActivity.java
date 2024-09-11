@@ -2,15 +2,23 @@ package com.xinlan.imageeditlibrary.editimage;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.appcompat.app.AlertDialog;
+
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.MotionEvent;
@@ -18,7 +26,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
-
 import com.xinlan.imageeditlibrary.BaseActivity;
 import com.xinlan.imageeditlibrary.R;
 import com.xinlan.imageeditlibrary.editimage.fragment.AddTextFragment;
@@ -40,6 +47,11 @@ import com.xinlan.imageeditlibrary.editimage.view.imagezoom.ImageViewTouch;
 import com.xinlan.imageeditlibrary.editimage.utils.BitmapUtils;
 import com.xinlan.imageeditlibrary.editimage.view.imagezoom.ImageViewTouchBase;
 import com.xinlan.imageeditlibrary.editimage.widget.RedoUndoController;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * <p>
@@ -436,10 +448,56 @@ public class EditImageActivity extends BaseActivity {
         returnIntent.putExtra(FILE_PATH, filePath);
         returnIntent.putExtra(EXTRA_OUTPUT, saveFilePath);
         returnIntent.putExtra(IMAGE_IS_EDIT, mOpTimes > 0);
-
-        FileUtil.albumUpdate(this, saveFilePath);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            albumUpdate(this, saveFilePath);
+        } else {
+            FileUtil.albumUpdate(this, saveFilePath);
+        }
         setResult(RESULT_OK, returnIntent);
         finish();
+    }
+
+    private static void albumUpdate(Context context, String filePath) {
+        File file = new File(filePath);
+        if (file.exists()) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, file.getName());
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+            values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES);
+
+            Uri uri = null;
+            ContentResolver resolver = context.getContentResolver();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                uri = resolver.insert(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values);
+            } else {
+                values.put(MediaStore.Images.Media.DATA, filePath);
+                uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            }
+
+            if (uri != null) {
+                try {
+                    OutputStream outputStream = resolver.openOutputStream(uri);
+                    if (outputStream != null) {
+                        FileInputStream inputStream = new FileInputStream(file);
+                        byte[] buffer = new byte[1024];
+                        int len;
+                        while ((len = inputStream.read(buffer)) != -1) {
+                            outputStream.write(buffer, 0, len);
+                        }
+                        outputStream.close();
+                        inputStream.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            Uri contentUri = Uri.fromFile(file);
+            mediaScanIntent.setData(contentUri);
+            context.sendBroadcast(mediaScanIntent);
+        }
     }
 
     /**
