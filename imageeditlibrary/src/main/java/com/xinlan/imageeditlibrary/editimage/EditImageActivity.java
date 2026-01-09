@@ -50,7 +50,9 @@ import com.xinlan.imageeditlibrary.editimage.widget.RedoUndoController;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -80,6 +82,7 @@ public class EditImageActivity extends BaseActivity {
 
     public String filePath;// 需要编辑图片路径
     public String saveFilePath;// 生成的新图片路径
+    private Uri outputUri;
     private int imageWidth, imageHeight;// 展示图片控件 宽 高
     private LoadImageTask mLoadImageTask;
 
@@ -147,7 +150,76 @@ public class EditImageActivity extends BaseActivity {
     private void getData() {
         filePath = getIntent().getStringExtra(FILE_PATH);
         saveFilePath = getIntent().getStringExtra(EXTRA_OUTPUT);// 保存图片路径
+        filePath = resolveInputPath(filePath);
+        saveFilePath = resolveOutputPath(saveFilePath, filePath);
         loadImage(filePath);
+    }
+
+    private String resolveInputPath(String path) {
+        if (!isContentPath(path)) {
+            return path;
+        }
+        Uri uri = Uri.parse(path);
+        String cachedPath = copyUriToCache(uri);
+        return TextUtils.isEmpty(cachedPath) ? path : cachedPath;
+    }
+
+    private String resolveOutputPath(String path, String fallback) {
+        if (TextUtils.isEmpty(path)) {
+            return fallback;
+        }
+        if (!isContentPath(path)) {
+            return path;
+        }
+        outputUri = Uri.parse(path);
+        String cachedPath = createTempOutputPath();
+        return TextUtils.isEmpty(cachedPath) ? fallback : cachedPath;
+    }
+
+    private boolean isContentPath(String path) {
+        return !TextUtils.isEmpty(path) && path.startsWith("content://");
+    }
+
+    private String createTempOutputPath() {
+        File dir = getCacheDir();
+        if (dir == null) {
+            return null;
+        }
+        File file = new File(dir, "edit_image_" + System.currentTimeMillis() + ".png");
+        return file.getAbsolutePath();
+    }
+
+    private String copyUriToCache(Uri uri) {
+        File dir = getCacheDir();
+        if (dir == null) {
+            return null;
+        }
+        File file = new File(dir, "edit_image_input_" + System.currentTimeMillis() + ".png");
+        try {
+            InputStream input = getContentResolver().openInputStream(uri);
+            if (input == null) {
+                return null;
+            }
+            FileOutputStream output = new FileOutputStream(file);
+            copyStreams(input, output);
+            return file.getAbsolutePath();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void copyStreams(InputStream input, OutputStream output) throws IOException {
+        try {
+            byte[] buffer = new byte[4096];
+            int len;
+            while ((len = input.read(buffer)) != -1) {
+                output.write(buffer, 0, len);
+            }
+        } finally {
+            input.close();
+            output.close();
+        }
     }
 
     private void initView() {
@@ -448,6 +520,9 @@ public class EditImageActivity extends BaseActivity {
         returnIntent.putExtra(FILE_PATH, filePath);
         returnIntent.putExtra(EXTRA_OUTPUT, saveFilePath);
         returnIntent.putExtra(IMAGE_IS_EDIT, mOpTimes > 0);
+        if (outputUri != null) {
+            copyFileToUri(saveFilePath, outputUri);
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             albumUpdate(this, saveFilePath);
         } else {
@@ -455,6 +530,26 @@ public class EditImageActivity extends BaseActivity {
         }
         setResult(RESULT_OK, returnIntent);
         finish();
+    }
+
+    private void copyFileToUri(String filePath, Uri uri) {
+        if (TextUtils.isEmpty(filePath) || uri == null) {
+            return;
+        }
+        File file = new File(filePath);
+        if (!file.exists()) {
+            return;
+        }
+        try {
+            OutputStream output = getContentResolver().openOutputStream(uri);
+            if (output == null) {
+                return;
+            }
+            InputStream input = new FileInputStream(file);
+            copyStreams(input, output);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void albumUpdate(Context context, String filePath) {
